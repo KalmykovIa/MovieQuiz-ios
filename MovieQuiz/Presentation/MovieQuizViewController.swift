@@ -37,7 +37,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         imageView.layer.cornerRadius = 20
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         statisticService = StatisticServiceImp()
-
         showLoadingIndicator()
         questionFactory?.loadData()
     }
