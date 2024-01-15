@@ -6,24 +6,77 @@
 //
 
 import Foundation
+import UIKit
 
 final class QuestionFactory: QuestionFactoryProtocol {
     
-    init(delegate: QuestionFactoryDelegate?) {
+    private let moviesLoader: MoviesLoading
+    private weak var delegate: QuestionFactoryDelegate?
+    private var movies: [MostPopularMovie] = []
+
+    init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
+        self.moviesLoader = moviesLoader
         self.delegate = delegate
     }
     
-    private weak var delegate: QuestionFactoryDelegate?
+    func loadData(completion: @escaping (Result<Void, Error>) -> Void) {
+            moviesLoader.loadMovies { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    switch result {
+                    case .success(let mostPopularMovies):
+                        self.movies = mostPopularMovies.items
+                        if self.movies.isEmpty {
+                            // Показать Alert с сообщением о пустом массиве
+                            let errorAlert = UIAlertController(title: "Ошибка", message: "Нет данных", preferredStyle: .alert)
+                            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+                            errorAlert.addAction(okAction)
+                            completion(.failure(NSError(domain: "YourDomain", code: 0, userInfo: [NSLocalizedDescriptionKey: "Нет данных. Invalid API Key"])))
+                        } else {
+                            // Уведомить о успешной загрузке данных
+                            completion(.success(()))
+                        }
+                    case .failure(let error):
+                        // Уведомить о неудачной загрузке данных
+                        completion(.failure(error))
+                    }
+                }
+            }
+        }
     
     func requestNextQuestion() {
-        guard let index = (0..<questions.count).randomElement() else { return }
-        
-        let question = questions[safe: index]
-        delegate?.didReceiveNextQuestion(question: question)
+        DispatchQueue.global().async { [weak self] in
+            guard let self = self else { return }
+            let index = (0..<self.movies.count).randomElement() ?? 0
+            
+            guard let movie = self.movies[safe: index] else { return }
+            
+            var imageData = Data()
+           
+           do {
+                imageData = try Data(contentsOf: movie.imageURL)
+            } catch {
+                print("Failed to load image")
+            }
+            
+            let rating = Float(movie.rating) ?? 0
+            
+            let text = "Рейтинг этого фильма больше чем 7?"
+            let correctAnswer = rating > 7
+            
+            let question = QuizQuestion(image: imageData,
+                                         text: text,
+                                         correctAnswer: correctAnswer)
+            
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.didReceiveNextQuestion(question: question)
+            }
+        }
     }
 }
 
-private let questions: [QuizQuestion] = [
+/*private let questions: [QuizQuestion] = [
     QuizQuestion(
         image: "The Godfather",
         text: "Рейтинг этого фильма больше чем 6?",
@@ -64,4 +117,4 @@ private let questions: [QuizQuestion] = [
         image: "Vivarium",
         text: "Рейтинг этого фильма больше чем 6?",
         correctAnswer: false)
-]
+]*/
