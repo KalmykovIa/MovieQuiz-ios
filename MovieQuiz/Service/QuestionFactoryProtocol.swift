@@ -9,5 +9,5 @@ import Foundation
 
 protocol QuestionFactoryProtocol: AnyObject {
     func requestNextQuestion()
-    func loadData(completion: @escaping (Result<Void, Error>) -> Void)
+    func loadData()
 }

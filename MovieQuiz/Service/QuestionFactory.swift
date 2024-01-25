@@ -10,6 +10,10 @@ import UIKit
 
 final class QuestionFactory: QuestionFactoryProtocol {
     
+    
+    
+    
+    
     private let moviesLoader: MoviesLoading
     private weak var delegate: QuestionFactoryDelegate?
     private var movies: [MostPopularMovie] = []
@@ -19,26 +23,16 @@ final class QuestionFactory: QuestionFactoryProtocol {
         self.delegate = delegate
     }
     
-    func loadData(completion: @escaping (Result<Void, Error>) -> Void) {
+    func loadData() {
             moviesLoader.loadMovies { [weak self] result in
                 DispatchQueue.main.async {
                     guard let self = self else { return }
                     switch result {
                     case .success(let mostPopularMovies):
                         self.movies = mostPopularMovies.items
-                        if self.movies.isEmpty {
-                            // Показать Alert с сообщением о пустом массиве
-                            let errorAlert = UIAlertController(title: "Ошибка", message: "Нет данных", preferredStyle: .alert)
-                            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-                            errorAlert.addAction(okAction)
-                            completion(.failure(NSError(domain: "YourDomain", code: 0, userInfo: [NSLocalizedDescriptionKey: "Нет данных. Invalid API Key"])))
-                        } else {
-                            // Уведомить о успешной загрузке данных
-                            completion(.success(()))
-                        }
+                        self.delegate?.didLoadDataFromServer()
                     case .failure(let error):
-                        // Уведомить о неудачной загрузке данных
-                        completion(.failure(error))
+                        self.delegate?.didFailToLoadData(with: error)
                     }
                 }
             }
