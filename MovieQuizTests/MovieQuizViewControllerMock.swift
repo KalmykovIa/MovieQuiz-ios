@@ -6,3 +6,35 @@
 //
 
 import Foundation
+import XCTest
+@testable import MovieQuiz
+
+
+final class MovieQuizViewControllerMock: MovieQuizViewControllerProtocol {
+    
+    func highlightImageBorder(isCorrect: Bool) {
+        
+    }
+    
+    func showLoadingIndicator() {
+        
+    }
+    
+    func hideLoadingIndicator() {
+        
+    }
+    
+    func showNetworkError(message: String) {
+        
+    }
+    
+    func show(quiz step: QuizStepViewModel) {
+        
+    }
+    
+    func show(quiz result: QuizResultViewModel) {
+        
+    }
+}
+
+
